@@ -204,6 +204,53 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ===== FAQ ACCORDION =====
+    const faqQuestions = document.querySelectorAll('.faq-question');
+    faqQuestions.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const item = btn.parentElement;
+            const isOpen = item.classList.contains('active');
+
+            // Close all other FAQ items
+            document.querySelectorAll('.faq-item.active').forEach(openItem => {
+                if (openItem !== item) {
+                    openItem.classList.remove('active');
+                    openItem.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // Toggle current item
+            item.classList.toggle('active', !isOpen);
+            btn.setAttribute('aria-expanded', String(!isOpen));
+        });
+    });
+
+    // ===== CALLBACK FORM HANDLING =====
+    const callbackForm = document.getElementById('callbackForm');
+    if (callbackForm) {
+        callbackForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(callbackForm);
+            const data = Object.fromEntries(formData.entries());
+
+            if (!data['callback-name'] || !data['callback-phone']) {
+                alert('Please enter your name and phone number.');
+                return;
+            }
+
+            const formWrap = callbackForm.parentElement;
+            formWrap.innerHTML = `
+                <div class="form-success">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Callback Requested!</h3>
+                    <p>We'll call you back as soon as possible.</p>
+                </div>
+            `;
+            formWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            console.log('Callback request:', data);
+        });
+    }
+
     // ===== SMOOTH SCROLL FOR ANCHOR LINKS =====
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', (e) => {

@@ -1,0 +1,6 @@
+# Hart Sound & Air Testing Ltd
+User-agent: *
+Allow: /
+Disallow: /.vercel/
+
+Sitemap: https://www.hartsoundairtesting.co.uk/sitemap.xml

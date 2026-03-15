@@ -5,6 +5,43 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ===== CHECK FOR FORM REDIRECT SUCCESS =====
+    const urlParams = new URLSearchParams(window.location.search);
+    const sentParam = urlParams.get('sent');
+    if (sentParam) {
+        const contactSection = document.getElementById('contact');
+        if (contactSection) {
+            setTimeout(() => {
+                contactSection.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+        if (sentParam === 'quote') {
+            const formWrap = document.querySelector('.contact-form-wrap');
+            if (formWrap) {
+                formWrap.innerHTML = `
+                    <div class="form-success">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Thank You!</h3>
+                        <p>Your quote request has been sent successfully. We'll get back to you within 24 hours.</p>
+                    </div>
+                `;
+            }
+        } else if (sentParam === 'callback') {
+            const callbackBox = document.querySelector('.callback-box');
+            if (callbackBox) {
+                callbackBox.innerHTML = `
+                    <div class="form-success">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Callback Requested!</h3>
+                        <p>We'll call you back as soon as possible.</p>
+                    </div>
+                `;
+            }
+        }
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+    }
+
     // ===== NAVBAR SCROLL EFFECT =====
     const navbar = document.getElementById('navbar');
     const backToTop = document.getElementById('backToTop');
@@ -169,54 +206,48 @@ document.addEventListener('DOMContentLoaded', () => {
         contactForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            // Collect form data
             const formData = new FormData(contactForm);
-            const data = Object.fromEntries(formData.entries());
 
             // Basic validation
-            if (!data.name || !data.phone || !data.email || !data.service) {
+            if (!formData.get('name') || !formData.get('phone') || !formData.get('email') || !formData.get('service')) {
                 alert('Please fill in all required fields.');
                 return;
             }
 
-            // Email validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(data.email)) {
+            if (!emailRegex.test(formData.get('email'))) {
                 alert('Please enter a valid email address.');
                 return;
             }
 
-            // Disable button while sending
             const submitBtn = contactForm.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             submitBtn.disabled = true;
 
-            // Send via Formsubmit
-            fetch(contactForm.action, {
+            fetch('https://formsubmit.co/ajax/info@hartsoundairtesting.co.uk', {
                 method: 'POST',
-                body: formData,
-                headers: { 'Accept': 'application/json' }
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(Object.fromEntries(formData))
             })
-            .then(response => {
-                if (response.ok) {
-                    const formWrap = contactForm.parentElement;
-                    formWrap.innerHTML = `
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    contactForm.parentElement.innerHTML = `
                         <div class="form-success">
                             <i class="fas fa-check-circle"></i>
                             <h3>Thank You!</h3>
                             <p>Your quote request has been sent successfully. We'll get back to you within 24 hours.</p>
                         </div>
                     `;
-                    formWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
-                    throw new Error('Form submission failed');
+                    // Fallback: submit form natively
+                    contactForm.submit();
                 }
             })
             .catch(() => {
-                alert('Sorry, there was a problem sending your request. Please call us on 07526 299 530 or email info@hartsoundairtesting.co.uk.');
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                // Fallback: submit form natively (will redirect via _next)
+                contactForm.submit();
             });
         });
     }
@@ -248,42 +279,37 @@ document.addEventListener('DOMContentLoaded', () => {
         callbackForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(callbackForm);
-            const data = Object.fromEntries(formData.entries());
 
-            if (!data.name || !data.phone) {
+            if (!formData.get('name') || !formData.get('phone')) {
                 alert('Please enter your name and phone number.');
                 return;
             }
 
             const submitBtn = callbackForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             submitBtn.disabled = true;
 
-            fetch(callbackForm.action, {
+            fetch('https://formsubmit.co/ajax/info@hartsoundairtesting.co.uk', {
                 method: 'POST',
-                body: formData,
-                headers: { 'Accept': 'application/json' }
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(Object.fromEntries(formData))
             })
-            .then(response => {
-                if (response.ok) {
-                    const formWrap = callbackForm.parentElement;
-                    formWrap.innerHTML = `
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    callbackForm.parentElement.innerHTML = `
                         <div class="form-success">
                             <i class="fas fa-check-circle"></i>
                             <h3>Callback Requested!</h3>
                             <p>We'll call you back as soon as possible.</p>
                         </div>
                     `;
-                    formWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
-                    throw new Error('Form submission failed');
+                    callbackForm.submit();
                 }
             })
             .catch(() => {
-                alert('Sorry, there was a problem. Please call us directly on 07526 299 530.');
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                callbackForm.submit();
             });
         });
     }

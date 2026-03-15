@@ -186,21 +186,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Show success state
-            const formWrap = contactForm.parentElement;
-            formWrap.innerHTML = `
-                <div class="form-success">
-                    <i class="fas fa-check-circle"></i>
-                    <h3>Thank You!</h3>
-                    <p>Your quote request has been sent successfully. We'll get back to you within 24 hours.</p>
-                </div>
-            `;
+            // Disable button while sending
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            submitBtn.disabled = true;
 
-            // Scroll to the success message
-            formWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            // Log to console (in production, send to server/email service)
-            console.log('Form submission:', data);
+            // Send via Formsubmit
+            fetch(contactForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(response => {
+                if (response.ok) {
+                    const formWrap = contactForm.parentElement;
+                    formWrap.innerHTML = `
+                        <div class="form-success">
+                            <i class="fas fa-check-circle"></i>
+                            <h3>Thank You!</h3>
+                            <p>Your quote request has been sent successfully. We'll get back to you within 24 hours.</p>
+                        </div>
+                    `;
+                    formWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    throw new Error('Form submission failed');
+                }
+            })
+            .catch(() => {
+                alert('Sorry, there was a problem sending your request. Please call us on 07526 299 530 or email info@hartsoundairtesting.co.uk.');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
         });
     }
 
@@ -233,21 +250,41 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(callbackForm);
             const data = Object.fromEntries(formData.entries());
 
-            if (!data['callback-name'] || !data['callback-phone']) {
+            if (!data.name || !data.phone) {
                 alert('Please enter your name and phone number.');
                 return;
             }
 
-            const formWrap = callbackForm.parentElement;
-            formWrap.innerHTML = `
-                <div class="form-success">
-                    <i class="fas fa-check-circle"></i>
-                    <h3>Callback Requested!</h3>
-                    <p>We'll call you back as soon as possible.</p>
-                </div>
-            `;
-            formWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            console.log('Callback request:', data);
+            const submitBtn = callbackForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            submitBtn.disabled = true;
+
+            fetch(callbackForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(response => {
+                if (response.ok) {
+                    const formWrap = callbackForm.parentElement;
+                    formWrap.innerHTML = `
+                        <div class="form-success">
+                            <i class="fas fa-check-circle"></i>
+                            <h3>Callback Requested!</h3>
+                            <p>We'll call you back as soon as possible.</p>
+                        </div>
+                    `;
+                    formWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    throw new Error('Form submission failed');
+                }
+            })
+            .catch(() => {
+                alert('Sorry, there was a problem. Please call us directly on 07526 299 530.');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
         });
     }
 
